@@ -156,7 +156,9 @@ class _CustomDraggableFloatState extends State<DraggableFloatWidget>
         widget.height -
         widget.config.borderBottom -
         _bottomBarHeight -
-        (widget.config.isFullScreen ? 0 : _variableTop); // 需要减去全面屏的bottom bar高度
+        (widget.config.isFullScreen
+            ? 0
+            : _variableTop); // The bottom bar height of the full screen needs to be subtracted.
     _left = widget.config.borderLeft;
     _right = _screenWidth - widget.width - widget.config.borderRight;
     // 3. Determine the location.
@@ -165,6 +167,24 @@ class _CustomDraggableFloatState extends State<DraggableFloatWidget>
     positionY = widget.config.initPositionYInTop
         ? _top + widget.config.initPositionYMarginBorder
         : _bottom - widget.config.initPositionYMarginBorder;
+    // The sum of the width and the border cannot exceed the screen width,
+    // otherwise unexpected errors will occur.
+    assert(
+      widget.width + widget.config.borderLeft + widget.config.borderRight <
+          _screenWidth,
+      'The sum of the width and the border cannot exceed the screen width, otherwise unexpected errors will occur.',
+    );
+    // The sum of height, border, AppBar height, and BottomBar height cannot
+    // exceed the screen height, otherwise an unexpected error will occur.
+    assert(
+      widget.height +
+              widget.config.borderTop +
+              widget.config.borderBottom +
+              _variableTop +
+              _bottomBarHeight <
+          _screenHeight,
+      'The sum of height, border, AppBar height, and BottomBar height cannot exceed the screen height, otherwise an unexpected error will occur.',
+    );
   }
 
   /// Initialize event subscription.
@@ -235,13 +255,9 @@ class _CustomDraggableFloatState extends State<DraggableFloatWidget>
     double _tempAbsY = (animStartPy - animEndPy).abs();
     // The current status of the component is AUTO_ATTACH_IN_PROGRESS.
     if (currentState == DraggableFloatWidgetState.AUTO_ATTACH_IN_PROGRESS) {
-      double _tempX = animEndPx <= _halfScreenW
-          ? (animStartPx < _left
-              ? animStartPx + _tempAbsX * _value
-              : animEndPx + _tempAbsX * (1 - _value))
-          : (animStartPx < _right
-              ? animStartPx + _tempAbsX * _value
-              : animEndPx + _tempAbsX * (1 - _value));
+      double _tempX = animStartPx < animEndPx
+          ? animStartPx + _tempAbsX * _value
+          : animEndPx + _tempAbsX * (1 - _value);
       double _tempY = animEndPy;
       if (animStartPy < _top) {
         _tempY = animStartPy + _tempAbsY * _value;

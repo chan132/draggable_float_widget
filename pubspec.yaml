@@ -1,6 +1,6 @@
 name: draggable_float_widget
 description: This is a draggable and floating Flutter widget, which can control its visibility through the scrolling event of ScrollView.
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/chan132/draggable_float_widget
 
 environment:
