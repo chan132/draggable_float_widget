@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:event_bus/event_bus.dart';
 import 'package:flutter/material.dart';
 
 import 'enum_state_event.dart';
-import 'event_operate.dart';
 import 'model_base_config.dart';
 
 /// The default value of [DraggableFloatWidget.width].
@@ -51,13 +49,13 @@ const double defaultWidgetHeight = 60;
 ///
 /// 2. How to send events externally:
 /// ```dart
-/// EventBus _eventBus = EventBus();
+/// StreamController<OperateEvent> eventStreamController = StreamController.broadcast();
 /// NotificationListener(
 ///   onNotification: (notification) {
 ///     if (notification is ScrollStartNotification) {
-///       _eventBus.fire(OperateHideEvent());
+///       eventStreamController.add(OperateEvent.OPERATE_HIDE);
 ///     } else if (notification is ScrollEndNotification) {
-///       _eventBus.fire(OperateShowEvent());
+///       eventStreamController.add(OperateEvent.OPERATE_SHOW);
 ///     }
 ///     return true;
 ///   },
@@ -71,8 +69,8 @@ class DraggableFloatWidget extends StatefulWidget {
   /// The height of [DraggableFloatWidget].
   final double height;
 
-  /// The instance of [EventBus].
-  final EventBus? eventBusInstance;
+  /// The [StreamController] of [OperateEvent].
+  final StreamController<OperateEvent>? eventStreamController;
 
   /// The base config of [DraggableFloatWidget].
   final DraggableFloatWidgetBaseConfig config;
@@ -89,7 +87,7 @@ class DraggableFloatWidget extends StatefulWidget {
     Key? key,
     this.width = defaultWidgetWidth,
     this.height = defaultWidgetHeight,
-    this.eventBusInstance,
+    this.eventStreamController,
     this.config = const DraggableFloatWidgetBaseConfig(),
     required this.child,
     this.onTap,
@@ -189,8 +187,8 @@ class _CustomDraggableFloatState extends State<DraggableFloatWidget>
 
   /// Initialize event subscription.
   _initEventSubscription() {
-    if (widget.eventBusInstance == null) return;
-    eventSubscription = widget.eventBusInstance!.on().listen((event) {
+    if (widget.eventStreamController == null) return;
+    eventSubscription = widget.eventStreamController!.stream.listen((event) {
       // 1. When an event is received, DraggableFloatWidget's current state is
       // the case of DRAG_IN_PROGRESS or AUTO_ATTACH_IN_PROGRESS, and the event
       // will not be handled.
@@ -198,13 +196,8 @@ class _CustomDraggableFloatState extends State<DraggableFloatWidget>
           currentState == DraggableFloatWidgetState.AUTO_ATTACH_IN_PROGRESS)
         return;
       // 2. Handle the event.
-      if (event.runtimeType == OperateHideEvent) {
-        _print("OperateHideEvent received!");
-        _handleReceivedEvent(OperateEvent.OPERATE_HIDE);
-      } else if (event.runtimeType == OperateShowEvent) {
-        _print("OperateShowEvent received!");
-        _handleReceivedEvent(OperateEvent.OPERATE_SHOW);
-      }
+      _print("$event received!");
+      _handleReceivedEvent(event);
     });
   }
 

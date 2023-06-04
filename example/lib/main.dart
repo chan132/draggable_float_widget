@@ -1,4 +1,5 @@
-import 'package:event_bus/event_bus.dart';
+import 'dart:async';
+
 import 'package:draggable_float_widget/draggable_float_widget.dart';
 import 'package:flutter/material.dart';
 
@@ -24,7 +25,7 @@ class TestDraggableFloatWidget extends StatefulWidget {
 
 class _TestDraggableFloatState extends State<TestDraggableFloatWidget> {
   static const double bottomBarHeight = 50;
-  late EventBus eventBus;
+  late StreamController<OperateEvent> eventStreamController;
 
   int _selectedIndex = 0;
   List<Widget> _pages = [];
@@ -33,19 +34,19 @@ class _TestDraggableFloatState extends State<TestDraggableFloatWidget> {
   @override
   void initState() {
     super.initState();
-    eventBus = EventBus();
+    eventStreamController = StreamController.broadcast();
     _pages
       ..add(StackModePage(
         child: defaultDragWidget,
         listView: defaultList,
         navigatorBarHeight: bottomBarHeight,
-        globalEventBus: eventBus,
+        eventStreamController: eventStreamController,
       ))
       ..add(OverlayModePage(
         child: defaultDragWidget,
         listView: defaultList,
         navigatorBarHeight: bottomBarHeight,
-        globalEventBus: eventBus,
+        eventStreamController: eventStreamController,
       ));
   }
 
@@ -74,9 +75,9 @@ class _TestDraggableFloatState extends State<TestDraggableFloatWidget> {
         child: NotificationListener(
           onNotification: (notification) {
             if (notification is ScrollStartNotification) {
-              eventBus.fire(OperateHideEvent());
+              eventStreamController.add(OperateEvent.OPERATE_HIDE);
             } else if (notification is ScrollEndNotification) {
-              eventBus.fire(OperateShowEvent());
+              eventStreamController.add(OperateEvent.OPERATE_SHOW);
             }
             return true;
           },
@@ -105,7 +106,7 @@ class _TestDraggableFloatState extends State<TestDraggableFloatWidget> {
 
   @override
   void dispose() {
-    eventBus.destroy();
+    eventStreamController.close();
     _pageController.dispose();
     super.dispose();
   }
@@ -183,14 +184,14 @@ class StackModePage extends StatelessWidget {
   final Widget child;
   final Widget listView;
   final double navigatorBarHeight;
-  final EventBus globalEventBus;
+  final StreamController<OperateEvent> eventStreamController;
 
   const StackModePage({
     Key? key,
     required this.child,
     required this.listView,
     required this.navigatorBarHeight,
-    required this.globalEventBus,
+    required this.eventStreamController,
   }) : super(key: key);
 
   @override
@@ -208,7 +209,7 @@ class StackModePage extends StatelessWidget {
           listView,
           DraggableFloatWidget(
             child: child,
-            eventBusInstance: globalEventBus,
+            eventStreamController: eventStreamController,
             config: DraggableFloatWidgetBaseConfig(
               isFullScreen: false,
               initPositionYInTop: false,
@@ -228,14 +229,14 @@ class OverlayModePage extends StatefulWidget {
   final Widget child;
   final Widget listView;
   final double navigatorBarHeight;
-  final EventBus globalEventBus;
+  final StreamController<OperateEvent> eventStreamController;
 
   const OverlayModePage({
     Key? key,
     required this.child,
     required this.listView,
     required this.navigatorBarHeight,
-    required this.globalEventBus,
+    required this.eventStreamController,
   }) : super(key: key);
 
   @override
@@ -302,7 +303,7 @@ class _OverlayModeState extends State<OverlayModePage> {
     _overlayEntry = OverlayEntry(builder: (context) {
       return DraggableFloatWidget(
         child: widget.child,
-        eventBusInstance: widget.globalEventBus,
+        eventStreamController: widget.eventStreamController,
         config: DraggableFloatWidgetBaseConfig(
           initPositionYInTop: false,
           initPositionYMarginBorder: 50,

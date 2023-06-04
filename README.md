@@ -17,7 +17,7 @@ To use this plugin, add `draggable_float_widget` as a dependency in your pubspec
     Key? key,
     this.width = defaultWidgetWidth,
     this.height = defaultWidgetHeight,
-    this.eventBusInstance,
+    this.eventStreamController,
     this.config = const DraggableFloatWidgetBaseConfig(),
     required this.child,
     this.onTap,
@@ -28,7 +28,7 @@ To use this plugin, add `draggable_float_widget` as a dependency in your pubspec
 
   | property         | description                               | default                          |
   | ---------------- | ----------------------------------------- | -------------------------------- |
-  | eventBusInstance | the instance of [EventBus]                | null                             |
+  | eventStreamController | The [StreamController] of [OperateEvent]                | null                             |
   | config           | the base config of [DraggableFloatWidget] | DraggableFloatWidgetBaseConfig() |
 
 * the base config of component
@@ -56,15 +56,15 @@ To use this plugin, add `draggable_float_widget` as a dependency in your pubspec
 
 * the first, add scroll listener
 
-  ⚠️Ignore this step if the component is not affected by ScrollView scrolling, and you don't need to pass an EventBus instance into the instance.
+  ⚠️Ignore this step if the component is not affected by ScrollView scrolling, and you don't need to pass an StreamController instance into the instance.
 
   ``` dart
   NotificationListener(
     onNotification: (notification) {
       if (notification is ScrollStartNotification) {
-        eventBus.fire(OperateHideEvent());
+        eventStreamController.add(OperateEvent.OPERATE_HIDE);
       } else if (notification is ScrollEndNotification) {
-        eventBus.fire(OperateShowEvent());
+        eventStreamController.add(OperateEvent.OPERATE_SHOW);
       }
       return true;
     },
@@ -80,7 +80,7 @@ To use this plugin, add `draggable_float_widget` as a dependency in your pubspec
       listView,
       DraggableFloatWidget(
         child: child,
-        eventBusInstance: eventBus,
+        eventStreamController: eventStreamController,
         config: DraggableFloatWidgetBaseConfig(
           isFullScreen: false,
           initPositionYInTop: false,
@@ -101,7 +101,7 @@ To use this plugin, add `draggable_float_widget` as a dependency in your pubspec
   _overlayEntry = OverlayEntry(builder: (context) {
     return DraggableFloatWidget(
       child: widget.child,
-      eventBusInstance: widget.globalEventBus,
+      eventStreamController: widget.eventStreamController,
       config: DraggableFloatWidgetBaseConfig(
         initPositionYInTop: false,
         initPositionYMarginBorder: 50,
